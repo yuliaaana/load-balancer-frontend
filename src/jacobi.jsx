@@ -2,15 +2,26 @@
 
 import React, { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import {jwtDecode} from 'jwt-decode'; 
 
 const Jacobi = () => {
   const [size, setSize] = useState(2000); 
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [userId, setUserId] = useState(null); 
 
   useEffect(() => {
-    const socket = io('http://localhost:4000'); 
+    const token = localStorage.getItem('token'); 
+    const decodedToken = jwtDecode(token); 
+    setUserId(decodedToken.userId); 
+
+    const socket = io('http://localhost:4000', {
+      query: { 
+        token, 
+        userId: decodedToken.userId 
+      }
+    }); 
 
     socket.on('taskProgressUpdate', (data) => {
       setProgress(data.progress);
@@ -31,6 +42,7 @@ const Jacobi = () => {
       size: size,
       tolerance: 1e-10,
       maxIterations: 10000,
+      userId: userId 
     };
 
     try {
